@@ -1,48 +1,70 @@
-import React, { Component } from "react";
-import ImageGallery from "./ImageGallery/ImageGallery";
-import Modal from "./Modal/Modal";
-import Searchbar from "./Searchbar/Searchbar";
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { GlobalStyle } from './GlobalStyle';
+import ImageGallery from './ImageGallery/ImageGallery';
+import { Layout } from './Layout';
+import Searchbar from './Searchbar/Searchbar';
+import { addImage } from 'services/api';
+import Loader from './Loader/Loader';
 
-class App extends Component {
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState(null);
 
-  state = {
-    inputValue: '',
-    modalImg: '',
-    showModal: false,
-    page: 1,
-  }
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
 
-  getInputValue = handleValue => {
-    this.setState({ inputValue: handleValue, page: 1, })
-  }
+    addImage(query, page)
+      .then(data => {
+        if (data.hits.length === 0) {
+          toast.error(`No results for ${this.state.query}`);
+          setIsLoading(false);
+          return;
+        }
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }))
-  }
+        setResults(prev => [...prev, ...data.hits]);
+        setTotal(data.totalHits);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        setError(error);
+      });
+  }, [query, page]);
 
-  getLargeImg = url => {
-    this.toggleModal();
-    this.setState({ modalImg: url });
-  }
-
-  loadMoreBtn = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handleFormSubmit = query => {
+    setQuery(query);
+    setIsLoading(true);
+    setPage(1);
+    setResults([]);
+    setError(null);
   };
 
+  const loadMore = () => {
+    setPage(page + 1);
+  };
 
-  render() {
-    const { modalImg, showModal ,page} = this.state;
+  return (
+    <Layout>
+      <Searchbar onSubmit={handleFormSubmit} />
+      {error && <p>Something went wrong</p>}
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <ImageGallery
+          items={results}
+          onLoadMoreClick={loadMore}
+          allResults={total}
+        />
+      )}
 
-    return (
-      <>
-        <Searchbar getInputValue={this.getInputValue}/>
-        <ImageGallery inputValue={this.state.inputValue} onClick={this.getLargeImg} loadMoreBtn={this.loadMoreBtn} page={page} />
-        {showModal && <Modal url={modalImg} onClose={this.toggleModal} />}
-      </>
-    )
-  }
+      <Toaster />
+      <GlobalStyle />
+    </Layout>
+  );
 }
-
-export default App;

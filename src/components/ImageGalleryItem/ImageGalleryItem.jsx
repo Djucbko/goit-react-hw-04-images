@@ -1,18 +1,30 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
-import s from './ImageGalleryItem.module.css';
 
-export default function ImageGalleryItem({ url, tags, onClick }) {
+import { Modal } from 'components/Modal/Modal';
+import { ImgItem, ImgItemImage } from './ImageGalleryItem.styled';
+
+export function ImageGalleryItem({ image }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const modalOpen = () => {
+    setIsModalOpen(true);
+  };
+
+  const modalClose = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <>
-      <li className={s.item}>
-        <img src={url} alt={tags} onClick={() => onClick(url)} />
-      </li>
+      <ImgItem onClick={modalOpen}>
+        <ImgItemImage src={image.webformatURL} alt="picture" />
+      </ImgItem>
+      {isModalOpen && <Modal onClose={modalClose} image={image} />}
     </>
   );
 }
 
 ImageGalleryItem.propTypes = {
-  url: PropTypes.string.isRequired,
-  tags: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired,
+  image: PropTypes.object.isRequired,
 };
