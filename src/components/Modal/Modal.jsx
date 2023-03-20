@@ -6,18 +6,19 @@ import { ModalContent, Overlay } from './Modal.styled';
 const modalRoot = document.querySelector('#modal-root');
 
 export function Modal({ onClose, image }) {
-  const handleKeyDown = e => {
+  
+
+  useEffect(() => {
+    const handleKeyDown = e => {
     if (e.code === 'Escape') {
       onClose();
     }
   };
-
-  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  });
+  }, [onClose]);
 
   const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {

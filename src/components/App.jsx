@@ -19,21 +19,28 @@ export default function App() {
     if (!query) {
       return;
     }
-
+    setError(null);
     addImage(query, page)
       .then(data => {
         if (data.hits.length === 0) {
           toast.error(`No results for ${this.state.query}`);
-          setIsLoading(false);
+          
           return;
         }
-
-        setResults(prev => [...prev, ...data.hits]);
+        const normalizedImages = data.hits.map(({ id, tags, webformatURL, largeImageURL }) => ({
+          id,
+          tags,
+          webformatURL,
+          largeImageURL,
+        }))
+        setResults(prev => [...prev, ...normalizedImages]);
         setTotal(data.totalHits);
-        setIsLoading(false);
+        
       })
       .catch(error => {
         setError(error);
+      }).finally(() => {
+        setIsLoading(false);
       });
   }, [query, page]);
 
@@ -42,11 +49,11 @@ export default function App() {
     setIsLoading(true);
     setPage(1);
     setResults([]);
-    setError(null);
+    
   };
 
   const loadMore = () => {
-    setPage(page + 1);
+    setPage((prev) => prev +1);
   };
 
   return (
